@@ -1,12 +1,12 @@
 const app = require('http').createServer();
 const io = require('socket.io')(app);
-const port = 8080;
+const port = 8000;
 app.listen(port);
-console.log(`server start.\napp is listening at ${port}.`);
+
+console.log(`socket server start.\napp is listening at ${port}.`);
+
 
 let users = [];
-let ips = [];
-
 // 當有連線進來
 io.on('connection', (socket) => {
     let ip = socket.handshake.address;

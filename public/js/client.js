@@ -1,5 +1,6 @@
 $(function() {
-    const socket = io('ws://localhost:8080'); // 連線至 socket
+    const baseUrl = "http://127.0.0.1:8080";
+    // const socket = io('ws://127.0.0.1:5000'); // 連線至 socket
     let myName = null;
     let connect_status = true;
 
@@ -8,17 +9,71 @@ $(function() {
     let emit_flag_logout = false;
     let emit_flag_send_msg = false;
 
-    // 加入聊天室
+    // 登入
     $('.login-btn').on("click", () => {
-        myName = $('#loginName').val();
-        console.log(myName);
-        if(myName) {
-            if(!emit_flag_login) {
-                emit_flag_login = true;
-                socket.emit('login', {name: myName}); // 發送登入 event
-            }
+        let acc = $('#account').val();
+        let pwd = $('#password').val();
+        if(acc && pwd) {
+
+            fetch(`${baseUrl}/login`, {
+                method: 'post',
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                body: JSON.stringify({
+                    account: acc,
+                    password: pwd
+                })
+            })
+            .then((res) => res.json())
+            .then((data) => {
+                console.log(data);
+                if(data.status) {
+                    Swal.fire({
+                        icon: "success", // 消息框的图标
+                        text: data.msg, // 消息框的文本内容
+                        timer: 1500, // 自动关闭消息框的时间（毫秒）
+                        heightAuto: false // 關閉避免跑版
+                    })
+                    .then(() => {
+                        // socket.io 連線
+                    });
+                }
+                else {
+                    Swal.fire({
+                        icon: "error",
+                        text: data.msg,
+                        timer: 1500,
+                        heightAuto: false // 關閉避免跑版
+                    });
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+
+            // axios.post(`${baseUrl}/login`, {
+            //     account: acc,
+            //     password: pwd
+            // }, {
+            //     headers: {'content-type': 'text/json'}
+            // })
+            // .then(function(response) {
+            //     console.log(response);
+            // })
+            // .catch(function(error) {
+            //     console.log(error);
+            // });
         }
-        else alert('Please enter a name');
+        else {
+            Swal.fire({
+                icon: "error",
+                text: "Please enter a account & password",
+                timer: 1500,
+                heightAuto: false
+            });
+        }
     })
     // 離開聊天室
     $('.leaveBtn').on("click", () => {
