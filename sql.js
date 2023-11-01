@@ -1,27 +1,12 @@
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 const pool = mysql.createPool({
     connectionLimit: 10,
-    host: 'localhost',
-    user: 'root',
-    password: '1234',
-    database: 'nodejs'
+    host: process.env["DB_HOST"],
+    user: process.env["DB_USER"],
+    password: process.env["DB_PASSWORD"],
+    database: process.env["DB_DATABASE"]
 });
 
-// 登入
-async function checkAccount(data) {
-    try {
-        const conn = await pool.getConnection(); // 从连接池获取连接
-        let sql = "select * from users where account = ?";
-        const [result] = await conn.query(sql, [data.account]); // [result] 返回的结果中提取第一个元素，并将其赋值给名为 result 的变量
-        conn.release(); // 释放连接回连接池
-        console.log(result);
-        return result;
-    }
-    catch (error) {
-        console.error(error);
-    }
-}
 
-module.exports = {
-    checkAccount
-}
+module.exports = pool;

@@ -1,0 +1,28 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>node.js 測試</title>
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&family=Noto+Sans+TC:wght@100;300;400;500;700&display=swap" rel="stylesheet">        
+
+<!-- style -->
+<link type="text/css" rel="stylesheet" href="css/style.css">
+
+<!-- jquery -->
+<script type="text/javascript" src="node_modules/jquery/dist/jquery.min.js"></script>
+
+<!-- axios -->
+<script type="text/javascript" src="node_modules/axios/dist/axios.js"></script>
+
+<!-- Sweetalert2 -->
+<link rel="stylesheet" href="node_modules/sweetalert2/dist/sweetalert2.css">
+<script type="text/javascript" src="node_modules/sweetalert2/dist/sweetalert2.js"></script>
+
+<!-- socket.io -->
+<script type="text/javascript" src="js/socket.io.js"></script>
+<script type="text/javascript" src="js/client.js"></script>
+
+<!-- url -->
+<script>
+    const Server_Url = '<%= process.env["APP_URL"] %>';
+    const Socket_Url = '<%= process.env["SOCKET_URL"] %>';
+</script>

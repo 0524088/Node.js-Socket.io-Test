@@ -1,5 +1,4 @@
 $(function() {
-    const baseUrl = "http://127.0.0.1:8080";
     // const socket = io('ws://127.0.0.1:5000'); // 連線至 socket
     let myName = null;
     let connect_status = true;
@@ -15,7 +14,7 @@ $(function() {
         let pwd = $('#password').val();
         if(acc && pwd) {
 
-            fetch(`${baseUrl}/login`, {
+            fetch(`${Server_Url}/login`, {
                 method: 'post',
                 headers: {
                     "Content-Type": "application/json",
