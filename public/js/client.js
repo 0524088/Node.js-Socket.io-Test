@@ -1,5 +1,5 @@
 $(function() {
-    // const socket = io('ws://127.0.0.1:5000'); // 連線至 socket
+    let socket = '';
     let myName = null;
     let connect_status = true;
 
@@ -13,8 +13,7 @@ $(function() {
         let acc = $('#account').val();
         let pwd = $('#password').val();
         if(acc && pwd) {
-
-            fetch(`${Server_Url}/login`, {
+            fetch(`${SERVER_URL}/login`, {
                 method: 'post',
                 headers: {
                     "Content-Type": "application/json",
@@ -36,7 +35,7 @@ $(function() {
                         heightAuto: false // 關閉避免跑版
                     })
                     .then(() => {
-                        // socket.io 連線
+                        socket = io(SOCKET_URL); // 連線至 socket
                     });
                 }
                 else {
@@ -88,8 +87,8 @@ $(function() {
         sendMessage();
     });
     // 按下Enter
-    $(document).on("keydown", (evt) => {
-        if(evt.keyCode == 13) sendMessage();
+    $(document).on("keydown", (e) => {
+        if(e.keyCode == 13) sendMessage();
     });
     
     // 伺服器連接成功
@@ -108,12 +107,14 @@ $(function() {
     // 登入成功 event
     socket.on('loginSuccess', (data) => {
         emit_flag_login = false;
-        if(data.name === myName) {
-            checkIn();
-            $('.chat-con').html('');
-            console.log(data);
-        }
-        else alert('錯誤的用戶名稱，請再嘗試一次');
+        Swal.fire({
+            icon: "success",
+            text: "聊天室進入成功",
+            timer: 1500,
+            heightAuto: false
+        })
+        checkIn();
+        $('.chat-con').html('');
     });
     // 登入失敗 event
     socket.on('loginFail', () => {

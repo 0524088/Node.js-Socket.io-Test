@@ -1,24 +1,29 @@
-const Users = require(`${process.cwd()}/app/model/Users`);
+const Users = require(`${process.cwd()}/model/Users`);
 
 const AuthController = {
-    checkAccount: async (request, response) => {
+    login: async (request, response) => {
         try {
-            const result = await Users.checkAccount(request.body);
-    
+
+            let result = await Users.checkAccount(request.body);
             let res = {
                 status : false,
                 msg    : "",
             };
-    
+            
+            // 查無資料
             if(result.length === 0) {
                 res.msg = "user undefined!";
             }
+            // 密碼不符
             else if(result[0].password != request.body.password) {
                 res.msg = "password not matched!";
             }
             else {
                 res.status = true;
                 res.msg = "login success!";
+                result = await Users.login(request.body); // 寫入登入狀態 & 產生&取得 token
+                request.session.token = result.token; // session 紀錄 token
+                console.log(request.session);
             }
     
             response.setHeader('Content-Type', 'application/json');
