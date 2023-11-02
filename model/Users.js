@@ -21,12 +21,31 @@ const Users = {
             const conn = await pool.getConnection(); // 从连接池获取连接
             let sql = "update users set token = ? where account = ?";
             let token = crypto.randomBytes(80).toString('base64').slice(0, 79);
-            const [result] = await conn.query(sql, [token, data.account]); // [result] 返回的结果中提取第一个元素，并将其赋值给名为 result 的变量
+            const [result] = await conn.query(sql, [token, data.account]);
             conn.release();
             return {
                 token: token,
                 result: result
             };
+        }
+        catch (error) {
+            console.error(error);
+        }
+    },
+
+    // 登出
+    logout: async (token) => {
+        try {
+            const conn = await pool.getConnection(); // 从连接池获取连接
+            let sql = "update users set token = ? where token = ?";
+            const [result] = await conn.query(sql, [null, token]);
+            conn.release();
+
+            // 執行成功
+            if(result.affectedRows > 0) {
+                return true;
+            }
+            return false;
         }
         catch (error) {
             console.error(error);
