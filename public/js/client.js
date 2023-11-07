@@ -1,12 +1,34 @@
 $(function() {
+    
     let socket = '';
-    let myName = null;
     let connect_status = true;
 
+    let isLogin = false;
     // 防止重複觸發 emit
     let emit_flag_login = false;
     let emit_flag_logout = false;
     let emit_flag_send_msg = false;
+
+    // 判斷是否有已登入
+    fetch(`${SERVER_URL}/api/checkLoginStatus`, {
+        method: 'get',
+    })
+    .then((res) => res.json())
+    .then((data) => {
+        console.log(data);
+        if(data.status) {
+            socket = io.connect(SOCKET_URL);
+            socket.emit('login');
+            isLogin = true;
+            addSocketListener();
+            checkIn();
+            $('.chat-con').html('');
+        }
+    })
+    .catch((error) => {
+        console.log(error);
+    });
+
 
     // 登入
     $('.login-btn').on("click", () => {
@@ -37,6 +59,7 @@ $(function() {
                     .then(() => {
                         socket = io.connect(SOCKET_URL); // 連線至 socket
                         socket.emit('login');
+                        isLogin = true;
                         addSocketListener();
                     });
                 }
@@ -76,8 +99,52 @@ $(function() {
         }
     })
 
-    
+    // 按下Enter
+    $(document).on("keypress", (e) => {
+        if(e.keyCode == 13) {
+            // 只有当SweetAlert2弹窗不可见时才模拟点击按钮
+            if(!$('.swal2-container').is(':visible') && !isLogin) {
+                $('.login-btn').click();
+            }
+            else {
+                $('.sendBtn').click();
+            }
+        }
+    });
 
+    // 離開聊天室按鈕
+    $('.leaveBtn').on("click", () => {
+        let leave = confirm('Are you sure you want to leave?');
+        if(leave && !emit_flag_logout) {
+            socket.emit('logout');
+            emit_flag_logout = true;
+            fetch(`${SERVER_URL}/logout`, {
+                method: 'GET'
+            })
+            .then((response) => response.json())
+            .then((res) => {
+                if(res.status) {
+                    Swal.fire({
+                        icon: "success",
+                        text: "登出成功",
+                        timer: 1500,
+                        heightAuto: false
+                    }).then(() => {
+                        isLogin = false;
+                        connect_status = true;
+                        checkOut();
+                    });
+                }
+            })
+        }
+    });
+
+    // 按下send按鈕
+    $('.sendBtn').on("click", () => {
+        let msg = $('#sendtxt').val();
+        sendMessage(msg);
+        $('#sendtxt').val('');
+    });
 
     // 隱藏登入頁，顯示聊天頁
     function checkIn() {
@@ -143,52 +210,25 @@ $(function() {
         });
     
         // 連線錯誤
-        socket.on('disconnect', () => {
+        socket.on('disconnect', (reason) => {
             connect_status = false;
-            alert('伺服器連接失敗');
+            if (reason === 'transport close') {
+                console.log('服务器意外断开');
+                alert('伺服器連接失敗');
+            }
+            else if (reason === 'ping timeout') {
+              console.log('服务器手动断开或网络问题');
+            }
         });
     
         // 離開成功
         socket.on('logoutSuccess', () => {
             emit_flag_logout = false;
+            console.log('logout');
+            removeSocketListener();
             checkOut();
         });
 
-        // 離開聊天室按鈕
-        $('.leaveBtn').on("click", () => {
-            let leave = confirm('Are you sure you want to leave?');
-            if(leave && !emit_flag_logout) {
-                emit_flag_logout = true;
-                fetch(`${SERVER_URL}/logout`, {
-                    method: 'GET'
-                })
-                .then((response) => response.json())
-                .then((res) => {
-                    if(res.status) {
-                        Swal.fire({
-                            icon: "success",
-                            text: "登出成功",
-                            timer: 1500,
-                            heightAuto: false
-                        }).then(() => {
-                            console.log('http登出');
-                            //socket.emit('logout');
-                        });
-                    }
-                })
-            }
-        });
-    
-        // 按下send按鈕
-        $('.sendBtn').on("click", () => {
-            let msg = $('#sendtxt').val();
-            sendMessage(msg);
-            $('#sendtxt').val('');
-        });
-        // 按下Enter
-        $(document).on("keydown", (e) => {
-            if(e.keyCode == 13) $('.sendBtn').click();
-        });
         // 其他使用者訊息
         socket.on('getUsersMsg', (data) => {
             showMessage(data);
@@ -205,5 +245,15 @@ $(function() {
         });
     }
     
+    // 移除 socket 監聽
+    function removeSocketListener() {
+        socket.off('loginSuccess');
+        socket.off('connect');
+        socket.off('disconnect');
+        socket.off('logoutSuccess');
+        socket.off('getUsersMsg');
+        socket.off('getServerMsg');
+        socket.off('getUsersCount');
+    }
 });
 

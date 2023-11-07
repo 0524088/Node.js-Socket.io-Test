@@ -7,7 +7,7 @@ const checkIsNotLogin = (req, res, next) => {
     {
         res.status(400).send({
             status: false,
-            msg: "user has already logged!"
+            msg: "user has already logged in!"
         });
     }
 };

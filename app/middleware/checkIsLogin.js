@@ -7,7 +7,7 @@ const checkIsLogin = (req, res, next) => {
     {
         res.status(400).send({
             status: false,
-            msg: "user has not logged"
+            msg: "user has not logged in"
         });
     }
 };

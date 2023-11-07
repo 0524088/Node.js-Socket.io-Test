@@ -63,7 +63,27 @@ app.post("/login", Middleware.checkIsNotLogin, (req, res) => {
 
 // 登出
 app.get("/logout", Middleware.checkIsLogin, (req, res) => {
-    AuthController.logout(io, req, res); // 會通知 socket 登出
+    res = AuthController.logout(req, res);
+    if(res.status) {
+        io.emit('logout', res.username); // 會通知 socket 登出
+    }
+});
+
+// 確認登入狀態 (判斷是否直接進入聊天室)
+app.get("/api/checkLoginStatus", (req, res) => {
+    console.log(req.session);
+    if(req.session.token) {
+        res.send({
+            status: true,
+            msg: "user has already logged in!"
+        });
+    }
+    else {
+        res.send({
+            status: false,
+            msg: "user has not logged in"
+        });
+    }
 });
 
 // 路由都沒找到會走這條
@@ -91,14 +111,25 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('getUsersMsg', { username: session.username, msg: msg });
     });
 
-    // 登出(手動斷開 socket)
-    socket.on('logout', (username) => {
-        console.log(username);
-        // socket.emit('logoutSuccess'); // 發送登出成功訊息
+    // 登出(手動斷開 socket，需註銷 session)
+    socket.on('logout', () => {
+        console.log('user logout: ' + session.username);
+        socket.emit('logoutSuccess');
+        
+        // 斷開客戶端連接
+        socket.disconnect();
+
         io.sockets.emit('getUsersCount', io.engine.clientsCount);
-        io.sockets.emit('getServerMsg', `${username} 離開聊天室`);
-        // delete socketSession.someData; // 将 "someData" 替换为要删除的数据字段名
-        // socketSession.save(); // 保存更改
+        io.sockets.emit('getServerMsg', `${session.username} 離開聊天室`);
+    });
+
+    // 斷線
+    socket.on('disconnect', (reason) => {
+        if (reason === 'client namespace disconnect') {
+            console.log('disconnect: ' + session.username);
+            io.sockets.emit('getUsersCount', io.engine.clientsCount);
+            io.sockets.emit('getServerMsg', `${session.username} 離開聊天室`);
+        }
     });
 });
   

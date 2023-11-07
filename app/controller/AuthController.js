@@ -33,21 +33,26 @@ const AuthController = {
         }
     },
 
-    logout: async (io, request, response) => {
+    logout: async (request, response) => {
         try {
             const session = request.session;
             const username = session.username;
             result = await Users.logout(session.token);
             if(result) {
                 console.log(username);
-                io.emit('logout', username);
                 await session.destroy();
                 response.setHeader('Content-Type', 'application/json');
                 response.status(200).send({
                     status: true,
-                    msg: "user logout success!"
+                    msg: "user logged out success!"
                 });
+
+                return {
+                    status: true,
+                    username: username
+                };
             }
+            else return { status: false };
         }
         catch(err) {
             response.send(err);
