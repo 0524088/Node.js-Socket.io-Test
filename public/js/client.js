@@ -50,11 +50,10 @@ $(function() {
             .then((data) => {
                 console.log(data);
                 if(data.status) {
-                    Swal.fire({
-                        icon: "success", // 消息框的图标
-                        text: data.msg, // 消息框的文本内容
-                        timer: 1500, // 自动关闭消息框的时间（毫秒）
-                        heightAuto: false // 關閉避免跑版
+                    showSweetAlert({
+                        iconClass: "success",
+                        msg: data.msg,
+                        timer: 1500
                     })
                     .then(() => {
                         socket = io.connect(SOCKET_URL); // 連線至 socket
@@ -64,11 +63,10 @@ $(function() {
                     });
                 }
                 else {
-                    Swal.fire({
-                        icon: "error",
-                        text: data.msg,
-                        timer: 1500,
-                        heightAuto: false // 關閉避免跑版
+                    showSweetAlert({
+                        iconClass: "error",
+                        msg: data.msg,
+                        timer: 1500
                     });
                 }
             })
@@ -90,11 +88,9 @@ $(function() {
             // });
         }
         else {
-            Swal.fire({
-                icon: "error",
-                text: "Please enter a account & password",
-                timer: 1500,
-                heightAuto: false
+            showSweetAlert({
+                iconClass: "error",
+                msg: "Please enter a account & password"
             });
         }
     })
@@ -114,29 +110,37 @@ $(function() {
 
     // 離開聊天室按鈕
     $('.leaveBtn').on("click", () => {
-        let leave = confirm('Are you sure you want to leave?');
-        if(leave && !emit_flag_logout) {
-            socket.emit('logout');
-            emit_flag_logout = true;
-            fetch(`${SERVER_URL}/logout`, {
-                method: 'GET'
-            })
-            .then((response) => response.json())
-            .then((res) => {
-                if(res.status) {
-                    Swal.fire({
-                        icon: "success",
-                        text: "登出成功",
-                        timer: 1500,
-                        heightAuto: false
-                    }).then(() => {
-                        isLogin = false;
-                        connect_status = true;
-                        checkOut();
-                    });
-                }
-            })
-        }
+        Swal.fire({
+            text: "Are you sure to leave?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'Cancel',
+        })
+        .then((result) => {
+            if (result.isConfirmed) {
+                socket.emit('logout');
+                emit_flag_logout = true;
+                fetch(`${SERVER_URL}/logout`, {
+                    method: 'GET'
+                })
+                .then((response) => response.json())
+                .then((res) => {
+                    if(res.status) {
+                        showSweetAlert({
+                            iconClass: "success",
+                            msg: "logged out success!",
+                            timer: 1500
+                        })
+                        .then(() => {
+                            isLogin = false;
+                            connect_status = true; // 避免被判斷為意外斷線
+                            checkOut();
+                        });
+                    }
+                });
+            }
+        });
     });
 
     // 按下send按鈕
@@ -190,12 +194,11 @@ $(function() {
         // 登入後連接 socket 成功
         socket.on('loginSuccess', (data) => {
             emit_flag_login = false;
-            Swal.fire({
-                icon: "success",
-                text: "聊天室進入成功",
-                timer: 1500,
-                heightAuto: false
-            }).then(() => {
+            showSweetAlert({
+                iconClass: "success",
+                msg: "socket is connecting"
+            })
+            .then(() => {
                 checkIn();
                 $('.chat-con').html('');
             });
@@ -205,7 +208,11 @@ $(function() {
         socket.on('connect', () => {
             if(!connect_status) {
                 connect_status = true;
-                alert('伺服器連接成功');
+                showSweetAlert({
+                    iconClass: "success",
+                    msg: "伺服器連接成功",
+                    timer: 1500
+                });
             }
         });
     
@@ -213,11 +220,16 @@ $(function() {
         socket.on('disconnect', (reason) => {
             connect_status = false;
             if (reason === 'transport close') {
-                console.log('服务器意外断开');
-                alert('伺服器連接失敗');
+                showSweetAlert({
+                    iconClass: "error",
+                    msg: "服务器意外断开",
+                });
             }
             else if (reason === 'ping timeout') {
-              console.log('服务器手动断开或网络问题');
+                showSweetAlert({
+                    iconClass: "error",
+                    msg: "服务器手动断开或网络问题",
+                });
             }
         });
     
@@ -254,6 +266,19 @@ $(function() {
         socket.off('getUsersMsg');
         socket.off('getServerMsg');
         socket.off('getUsersCount');
+    }
+
+
+    async function showSweetAlert({iconClass = '', msg = '', timer}) {
+        let options = {
+            icon: iconClass, // 消息框的图标
+            text: msg, // 消息框的文本内容
+            heightAuto: false // 關閉避免跑版
+        }
+
+        if(timer) options.timer = timer;
+
+        await Swal.fire(options)
     }
 });
 
