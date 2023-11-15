@@ -1,12 +1,12 @@
 $(function() {
     
     let socket = '';
+    let room = '';
     let connect_status = true;
 
     let isLogin = false;
     // 防止重複觸發 emit
-    let emit_flag_login = false;
-    let emit_flag_logout = false;
+    let emit_flag_join = false;
     let emit_flag_send_msg = false;
 
     // 判斷是否有已登入
@@ -17,12 +17,27 @@ $(function() {
     .then((data) => {
         console.log(data);
         if(data.status) {
-            socket = io.connect(SOCKET_URL);
-            socket.emit('login');
             isLogin = true;
-            addSocketListener();
-            checkIn();
-            $('.chat-con').html('');
+            // 判斷是否曾意外從聊天室斷線 (判斷是否直接進入聊天室)
+            fetch(`${SERVER_URL}/api/checkDisconnectFromRoom`, {
+                method: 'get',
+            })
+            .then((res) => res.json())
+            .then((data) => {
+                console.log(data);
+                socket = io.connect(SOCKET_URL);
+                addSocketListener();
+                if(data.status) {
+                    checkIn();
+                    $('.chat-con').html('');
+                }
+                else {
+                    switchFirstView(false);
+                }
+            })
+            .catch((error) => {
+                console.log(error);
+            });
         }
     })
     .catch((error) => {
@@ -31,7 +46,7 @@ $(function() {
 
 
     // 登入
-    $('.login-btn').on("click", () => {
+    $('#btn-login').on("click", () => {
         let acc = $('#account').val();
         let pwd = $('#password').val();
         if(acc && pwd) {
@@ -43,12 +58,14 @@ $(function() {
                 },
                 body: JSON.stringify({
                     account: acc,
-                    password: pwd
+                    password: pwd,
                 })
             })
             .then((res) => res.json())
             .then((data) => {
                 console.log(data);
+                $("#account").val('');
+                $("#password").val('');
                 if(data.status) {
                     showSweetAlert({
                         iconClass: "success",
@@ -57,9 +74,9 @@ $(function() {
                     })
                     .then(() => {
                         socket = io.connect(SOCKET_URL); // 連線至 socket
-                        socket.emit('login');
-                        isLogin = true;
                         addSocketListener();
+                        switchFirstView(false);
+                        isLogin = true;
                     });
                 }
                 else {
@@ -73,19 +90,6 @@ $(function() {
             .catch((error) => {
                 console.log(error);
             });
-
-            // axios.post(`${baseUrl}/login`, {
-            //     account: acc,
-            //     password: pwd
-            // }, {
-            //     headers: {'content-type': 'text/json'}
-            // })
-            // .then(function(response) {
-            //     console.log(response);
-            // })
-            // .catch(function(error) {
-            //     console.log(error);
-            // });
         }
         else {
             showSweetAlert({
@@ -93,23 +97,59 @@ $(function() {
                 msg: "Please enter a account & password"
             });
         }
-    })
+    });
+
+    // 加入房間
+    $('#btn-join').on('click', () => {
+        let room = $('#room').val();
+        if(room) {
+            socket.emit('join', room);
+        }
+        else {
+            showSweetAlert({
+                iconClass: "error",
+                msg: "Please enter a room name"
+            });
+        }
+    });
 
     // 按下Enter
     $(document).on("keypress", (e) => {
         if(e.keyCode == 13) {
             // 只有当SweetAlert2弹窗不可见时才模拟点击按钮
-            if(!$('.swal2-container').is(':visible') && !isLogin) {
-                $('.login-btn').click();
-            }
-            else {
-                $('.sendBtn').click();
-            }
+            // if(!$('.swal2-container').is(':visible') && !isLogin) {
+            //     $('.login-btn').click();
+            // }
+            // else {
+            //     $('.sendBtn').click();
+            // }
         }
     });
 
-    // 離開聊天室按鈕
-    $('.leaveBtn').on("click", () => {
+    // 登出按鈕
+    $('#btn-logout').on("click", () => {
+        fetch(`${SERVER_URL}/logout`, {
+            method: 'GET'
+        })
+        .then((response) => response.json())
+        .then((res) => {
+            if(res.status) {
+                showSweetAlert({
+                    iconClass: "success",
+                    msg: "logged out success!",
+                    timer: 1500
+                })
+                .then(() => {
+                    isLogin = false;
+                    removeSocketListener();
+                    switchFirstView(true);
+                });
+            }
+        });
+    });
+
+    // 離開聊天室按紐
+    $('#btn-leave').on("click", () => {
         Swal.fire({
             text: "Are you sure to leave?",
             icon: "question",
@@ -119,26 +159,8 @@ $(function() {
         })
         .then((result) => {
             if (result.isConfirmed) {
-                socket.emit('logout');
+                socket.emit('leave');
                 emit_flag_logout = true;
-                fetch(`${SERVER_URL}/logout`, {
-                    method: 'GET'
-                })
-                .then((response) => response.json())
-                .then((res) => {
-                    if(res.status) {
-                        showSweetAlert({
-                            iconClass: "success",
-                            msg: "logged out success!",
-                            timer: 1500
-                        })
-                        .then(() => {
-                            isLogin = false;
-                            connect_status = true; // 避免被判斷為意外斷線
-                            checkOut();
-                        });
-                    }
-                });
             }
         });
     });
@@ -154,16 +176,24 @@ $(function() {
     function checkIn() {
         $('.login-wrap').hide('slow');
         $('.chat-wrap').show('slow');
-        $("#account").val('');
-        $("#password").val('');
     }
-    
     // 隱藏聊天頁，顯示登入頁
     function checkOut() {
         $(".login-wrap").show('slow');
         $(".chat-wrap").hide("slow");
     }
-    
+
+    function switchFirstView(enable) {
+        if(enable) {
+            $('#div_auth').show();
+            $('#div_socket').hide();
+        }
+        else {
+            $('#div_auth').hide();
+            $('#div_socket').show();
+        }
+    }
+
     // 發送訊息
     function sendMessage(msg) {
         if(msg) {
@@ -192,11 +222,12 @@ $(function() {
 
     function addSocketListener() {
         // 登入後連接 socket 成功
-        socket.on('loginSuccess', (data) => {
-            emit_flag_login = false;
+        socket.on('joinSuccess', () => {
+            emit_flag_join = false;
+            socket.emit('getUsersCount');
             showSweetAlert({
                 iconClass: "success",
-                msg: "socket is connecting"
+                msg: `room: ${room} join success!`
             })
             .then(() => {
                 checkIn();
@@ -214,6 +245,7 @@ $(function() {
                     timer: 1500
                 });
             }
+            console.log("socket is connecting");
         });
     
         // 連線錯誤
@@ -232,12 +264,12 @@ $(function() {
                 });
             }
         });
-    
+        
         // 離開成功
-        socket.on('logoutSuccess', () => {
+        socket.on('leaveSuccess', () => {
             emit_flag_logout = false;
-            console.log('logout');
-            removeSocketListener();
+            console.log('leaveout');
+            switchFirstView(false);
             checkOut();
         });
 
@@ -253,6 +285,7 @@ $(function() {
     
         // 目前聊天室人數
         socket.on('getUsersCount', (count) => {
+            console.log(count);
             document.getElementById('chat-title').innerHTML = `在線人數: ${count}`;
         });
     }

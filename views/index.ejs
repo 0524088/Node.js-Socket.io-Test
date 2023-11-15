@@ -8,11 +8,19 @@
         <div class="login-wrap">
             <div class="login-con">
                 <p>🍇</p>
-                <span>Account</span>
-                <input type="text" placeholder="Account" id="account">
-                <span>Password</span>
-                <input type="password" placeholder="Password" id="password">
-                <button class="login-btn">Login</button>
+                <div id="div_auth">
+                    <span>Account</span>
+                    <input type="text" placeholder="Account" id="account">
+                    <span>Password</span>
+                    <input type="password" placeholder="Password" id="password">
+                    <button id="btn-login" class="login-btn">Login</button>
+                </div>
+                <div id="div_socket" style="display: none;">
+                    <span>Room</span>
+                    <input type="text" placeholder="Enter room name to create or join" id="room">
+                    <button id="btn-join" class="login-btn">Join</button>
+                    <button id="btn-logout" class="login-btn">Logout</button>
+                </div>
             </div>
         </div>
 
@@ -20,15 +28,13 @@
         <div class="chat-wrap hide">
             <div class="chat-wrap-top">
                 <h3 id="chat-title"> </h3>
-                <button class="leaveBtn"><img src="images/cross.png"></button>
+                <button id="btn-leave" class="leaveBtn">❌</button>
             </div>
             <div class="chat-wrap-main" id="chat-wrap">
                 <div class="chat-con" clearfix></div>
                 <div class="bottom">
                     <input type="text" id="sendtxt" placeholder="Type a message">
-                    <button class="sendBtn">
-                        <img src="images/send.png">
-                    </button>
+                    <button class="sendBtn"><span style="font-size: 24px;">↵</span></button>
                 </div>
             </div>
         </div>

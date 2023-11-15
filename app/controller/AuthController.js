@@ -39,7 +39,6 @@ const AuthController = {
             const username = session.username;
             result = await Users.logout(session.token);
             if(result) {
-                console.log(username);
                 await session.destroy();
                 response.setHeader('Content-Type', 'application/json');
                 response.status(200).send({
