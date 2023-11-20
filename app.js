@@ -134,74 +134,102 @@ app.use((req, res) => {
 // 連線事件處理
 io.on('connection', (socket) => {
     console.log('WebSocket client connect');
-    let session = socket.handshake.session;
+    const session = socket.handshake.session;
 
     // 意外斷線情況回復
     if(session.room) {
         socket.join(session.room);
         socketData.roomList[session.room][session.token] = {};
-        joinRoomEvent({ io: io, socket: socket, room: session.room, username: session.username });
+        joinRoomEvent({
+            roomList : socketData.roomList,
+            io       : io,
+            socket   : socket,
+            room     : session.room,
+            token    : session.token,
+            username : session.username
+        });
     }
 
     // 加入房間
     socket.on('join', (room) => {
         // 将用户加入指定房间
         socket.join(room);
+        
+        session.room = room;
 
         if(!socketData.roomList.hasOwnProperty(room)) {
             socketData.roomList[room] = {}; // 房間內部成員
         }
 
-        joinRoomEvent({ io: io, socket: socket, room: room, username: session.username });
+        socketData.roomList[session.room][session.token] = {};
+        joinRoomEvent({
+            roomList : socketData.roomList,
+            io       : io,
+            socket   : socket,
+            room     : session.room,
+            token    : session.token,
+            username : session.username
+        });
+        socket.emit('joinSuccess', room);
     });
     
     // 發送訊息
     socket.on('sendMessage', (msg) => {
-        console.log('WebSocket get message: ', msg);
-        socket.to(room).emit('getUsersMsg', { username: session.username, msg: msg });
+        console.log(`User: "${session.username}" send message: "${msg}"`);
+        socket.to(session.room).emit('getUsersMsg', { 
+                                username: session.username,
+                                msg: msg
+                            });
     });
 
     // 取得數量
     socket.on('getUsersCount', () => {
+        console.log(`session room: ${session.room}`);
         const roomUsersCount = Object.keys(socketData.roomList[session.room]).length;
         socket.emit('getUsersCount', roomUsersCount);
     });
 
     // 登出(手動斷開 socket，需註銷 session)
     socket.on('leave', () => {
-        console.log(`user: ${session.username} leave`);
-        const room  = session.room;
-        const token = session.token;
-
+        console.log(`User: "${session.username}" left`);
         // 將使用者從房間內移除
-        delete socketData.roomList[room][token];
+        delete socketData.roomList[session.room][session.token];
 
-        leaveRoomEvent({ socket: socket, room: room });
+        leaveRoomEvent({
+            roomList : socketData.roomList,
+            socket   : socket,
+            room     : session.room,
+            token    : session.token,
+            username : session.username
+        });
 
         // 斷開房間連接
-        socket.leave('room');
+        socket.leave(session.room);
         socket.emit('leaveSuccess');
     });
 
     // 斷線
     socket.on('disconnect', (reason) => {
-        console.log(`user: "${session.username}" leave unexpected`);
-        const room  = session.room;
-        const token = session.token;
-
         // 在房間的時候斷線
-        if(room) {
+        if(session.room) {
             // 將使用者從房間內移除
-            delete socketData.roomList[room][token];
-            leaveRoomEvent({ socket: socket, room: room });
+            delete socketData.roomList[session.room][session.token];
+            leaveRoomEvent({
+                roomList : socketData.roomList,
+                socket   : socket,
+                room     : session.room,
+                token    : session.token,
+                username : session.username
+            });
         }
+        else console.log(`User: "${session.username}" left unexpected`);
     });
 });
 
-function joinRoomEvent({ io, socket, room, token, username }) {
-    console.log(socketData.roomList);
+function joinRoomEvent({ roomList, io, socket, room, token, username }) {
+    
     // 获取房间内的连接数量
-    const roomUsersCount = Object.keys(socketData.roomList[room]).length;
+    const roomUsersCount = Object.keys(roomList[room]).length;
 
     // 廣播給所有用戶
     io.to(room).emit('getUsersCount', roomUsersCount);
@@ -210,13 +238,13 @@ function joinRoomEvent({ io, socket, room, token, username }) {
     socket.to(room).emit('getServerMsg', `${username} 加入聊天室`);
 }
 
-function leaveRoomEvent({ socket, room, token, username }) {
+function leaveRoomEvent({ roomList, io, socket, room, token, username }) {
     // 获取房间内的连接数量
-    const roomUsersCount = Object.keys(socketData.roomList[room]).length;
+    const roomUsersCount = Object.keys(roomList[room]).length;
 
     // 广播给房间内其他用户
     socket.to(room).emit('getUsersCount', roomUsersCount);
-    socket.to(room).emit('getServerMsg', `${session.username} 離開聊天室`);
+    socket.to(room).emit('getServerMsg', `${username} 離開聊天室`);
 }
   
   
