@@ -34,7 +34,10 @@ Node.js Socket.io 聊天室
 
 ![image](https://github.com/0524088/Node.js-Socket.io-Test/assets/144317928/5d97def7-587f-46ec-91a6-c44f38c0cc98)
 <br>
-- 若意外斷線會自動判斷是否登入以及是否直接從聊天室離開，會自動導向房間建立頁面或重新進入聊天室<br>
+- 若意外斷線會判斷是否登入以及是否直接從聊天室離開，會自動導向房間建立頁面或重新進入聊天室<br>
+
+![bandicam 2023-11-21 11-06-42-324](https://github.com/0524088/Node.js-Socket.io-ChatRoom/assets/144317928/ccad8744-fbc3-4ef4-b09d-75ea05a0dfab)
+<br>
 
 
 
