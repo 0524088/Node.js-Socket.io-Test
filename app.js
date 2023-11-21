@@ -2,8 +2,8 @@ require('dotenv').config(); // 使用環境變數
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-
 const sharedSession = require('express-socket.io-session');
+const routes = require('./routes/route.js'); // 引入路由文件
 
 const app = express();
 const httpServer = http.createServer(app); // 創建伺服器實例 with express框架
@@ -15,7 +15,6 @@ const socket_Url = process.env["SOCKET_URL"];
 const socket_Port = process.env["SOCKET_PORT"];
 
 const Middleware = require(`${process.cwd()}/app/middleware/middlewareController.js`);
-const AuthController = require(`${process.cwd()}/app/controller/AuthController.js`);
 
 
 const socketData = {
@@ -69,67 +68,8 @@ app.use('/node_modules', express.static(`${process.cwd()}/node_modules/`));
 // 解析JSON
 app.use(express.json());
 
-
-// [Router]===========================================================================================================================
-app.get('/', (req, res) => {
-    res.render('index');
-});
-
-app.get('/index', (req, res) => {
-    res.render('index');
-});
-
-// 登入
-app.post("/login", Middleware.checkIsNotLogin, (req, res) => {
-    AuthController.login(req, res);
-});
-
-// 登出
-app.get("/logout", Middleware.checkIsLogin, (req, res) => {
-    res = AuthController.logout(req, res);
-    if(res.status) {
-        io.emit('logout', res.username); // 會通知 socket 登出
-    }
-});
-
-// 確認登入狀態
-app.get("/api/checkLoginStatus", (req, res) => {
-    if(req.session.token) {
-        res.send({
-            status: true,
-            msg: "user has already logged in!"
-        });
-    }
-    else {
-        res.send({
-            status: false,
-            msg: "user has not logged in"
-        });
-    }
-});
-
-// 確認是否曾意外從聊天室斷線 (判斷是否直接進入聊天室)
-app.get("/api/checkDisconnectFromRoom", (req, res) => {
-    if(req.session.room) {
-        res.send({
-            status: true,
-            msg: "user enter room again!"
-        });
-    }
-    else {
-        res.send({
-            status: false,
-            msg: "user haven't enter room!"
-        });
-    }
-});
-
-// 路由都沒找到會走這條
-app.use((req, res) => {
-    res.send('404 not found');
-});
-// =================================================================================================================================
-
+// 使用路由
+app.use(routes);
 
 // 連線事件處理
 io.on('connection', (socket) => {
@@ -250,4 +190,4 @@ function leaveRoomEvent({ roomList, io, socket, room, token, username }) {
     socket.to(room).emit('getServerMsg', `${username} 離開聊天室`);
 }
   
-  
+module.exports = app;
