@@ -1,25 +1,19 @@
-require('dotenv').config(); // 使用環境變數
-const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const sharedSession = require('express-socket.io-session');
-const routes = require('./routes/route.js'); // 引入路由文件
+// 使用環境變數
+import dotenv from 'dotenv';
+dotenv.config();
 
-const app = express();
-const httpServer = http.createServer(app); // 創建伺服器實例 with express框架
-const wsServer = http.createServer();
+import express       from 'express';
+import http          from 'http';
+import socketIo      from 'socket.io';
+import sharedSession from 'express-socket.io-session';
+import routes        from './routes/route.js'; // 引入路由文件
+
+import * as Middleware    from './app/middleware/middlewareController.js';
 
 const app_Url = process.env["APP_URL"];
 const app_Port = process.env["APP_PORT"];
 const socket_Url = process.env["SOCKET_URL"];
 const socket_Port = process.env["SOCKET_PORT"];
-
-const Middleware = require(`${process.cwd()}/app/middleware/middlewareController.js`);
-
-
-const socketData = {
-    roomList: {}
-};
 
 /**
  * socketData = {
@@ -38,6 +32,13 @@ const socketData = {
  * }
  * 
  */
+const socketData = {
+    roomList: {}
+};
+
+const app = express();
+const httpServer = http.createServer(app); // 創建伺服器實例 with express框架
+const wsServer = http.createServer();
 
 // 加上一個監聽器來監聽這個 port
 httpServer.listen(app_Port, () => {    
@@ -190,4 +191,4 @@ function leaveRoomEvent({ roomList, io, socket, room, token, username }) {
     socket.to(room).emit('getServerMsg', `${username} 離開聊天室`);
 }
   
-module.exports = app;
+export default app;

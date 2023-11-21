@@ -1,5 +1,6 @@
-const pool = require(`${process.cwd()}/sql.js`);
-const crypto = require('crypto'), hash = crypto.getHashes();
+import pool   from '../sql.js';
+import crypto from 'crypto';
+const hash = crypto.getHashes();
 const Users = {
     // 確認帳號狀態
     checkAccount: async (data) => {
@@ -53,4 +54,4 @@ const Users = {
     }
 }
 
-module.exports = Users;
+export default Users;

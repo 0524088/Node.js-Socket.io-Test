@@ -1,4 +1,4 @@
-const Users = require(`${process.cwd()}/model/Users`);
+import Users from '../../model/Users.js';
 
 const AuthController = {
     login: async (request, response) => {
@@ -60,4 +60,4 @@ const AuthController = {
 };
 
 
-module.exports = AuthController;
+export default AuthController;

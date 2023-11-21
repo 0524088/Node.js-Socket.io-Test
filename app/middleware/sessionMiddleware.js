@@ -1,4 +1,4 @@
-const session = require('express-session');
+import session from 'express-session';
 
 const sessionMiddleware = session({
     secret: 'nodejs_test',
@@ -11,4 +11,4 @@ const sessionMiddleware = session({
 });
 
 
-module.exports = sessionMiddleware;
+export default sessionMiddleware;

@@ -1,7 +1,7 @@
 // routes.js
-const express = require('express');
-const Middleware = require(`${process.cwd()}/app/middleware/middlewareController.js`);
-const AuthController = require(`${process.cwd()}/app/controller/AuthController.js`);
+import      express        from 'express';
+import * as Middleware     from '../app/middleware/middlewareController.js';
+import      AuthController from '../app/controller/AuthController.js';
 
 const router = express.Router();
 
@@ -63,4 +63,4 @@ router.use((req, res) => {
     res.send('404 not found');
 });
 
-module.exports = router;
+export default router;

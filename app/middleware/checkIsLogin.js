@@ -12,4 +12,4 @@ const checkIsLogin = (req, res, next) => {
     }
 };
 
-module.exports = checkIsLogin;
+export default checkIsLogin;
