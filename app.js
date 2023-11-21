@@ -1,7 +1,5 @@
 // 使用環境變數
-import dotenv from 'dotenv';
-dotenv.config();
-
+import dotenv from 'dotenv/config.js';
 import express       from 'express';
 import http          from 'http';
 import socketIo      from 'socket.io';
