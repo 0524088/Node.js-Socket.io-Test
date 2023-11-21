@@ -36,7 +36,7 @@ Node.js Socket.io 聊天室
 <br>
 - 若意外斷線會判斷是否登入以及是否直接從聊天室離開，會自動導向房間建立頁面或重新進入聊天室<br>
 
-![bandicam 2023-11-21 11-06-42-324](https://github.com/0524088/Node.js-Socket.io-ChatRoom/assets/144317928/ccad8744-fbc3-4ef4-b09d-75ea05a0dfab)
+![bandicam 2023-11-21 11-21-20-660](https://github.com/0524088/Node.js-Socket.io-ChatRoom/assets/144317928/72c1ef29-23b4-4ea2-8b78-6db4a258b280)
 <br>
 
 
