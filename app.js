@@ -192,9 +192,9 @@ io.on('connection', (socket) => {
     // 登出(手動斷開 socket，需註銷 session)
     socket.on('leave', () => {
         console.log(`User: "${session.username}" left`);
+
         // 將使用者從房間內移除
         delete socketData.roomList[session.room][session.token];
-
         leaveRoomEvent({
             roomList : socketData.roomList,
             socket   : socket,
@@ -202,6 +202,9 @@ io.on('connection', (socket) => {
             token    : session.token,
             username : session.username
         });
+
+        // 清除 session 房間紀錄
+        delete session.room;
 
         // 斷開房間連接
         socket.leave(session.room);
