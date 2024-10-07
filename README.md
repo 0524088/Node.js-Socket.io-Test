@@ -1,7 +1,3 @@
-# Node.js-Socket.io-ChatRoom
-Node.js Socket.io 聊天室
-
-# 目的
 練習 node.js 和 socket.io 的應用及整合
 
 # 流程
